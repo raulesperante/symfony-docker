@@ -2,6 +2,7 @@ version: '3'
 
 services:
     db:
+        container_name: mysql_db
         image: mysql:8.0.20
         command: --default-authentication-plugin=mysql_native_password
         volumes:
@@ -16,6 +17,7 @@ services:
         networks:
             - symfony
     php:
+        container_name: php-symfony
         build:
             context: .
             dockerfile: docker/php/Dockerfile
@@ -26,18 +28,33 @@ services:
         networks:
             - symfony
     nginx:
+        container_name: nginx
         build:
             context: .
             dockerfile: docker/nginx/Dockerfile
         volumes:
             - ./symfony/:/var/www/symfony/
         ports:
-            - 80:80
+            - 8005:80
+        environment:
+            VIRTUAL_HOST: proyecto-symfony.com.devel
+        networks:
+            - symfony
+
+    nginx-proxy:
+        image: jwilder/nginx-proxy
+        ports:
+            - "80:80"
+            - "443:443"
+        volumes:
+            - /var/run/docker.sock:/tmp/docker.sock:ro
+        restart: always
+        privileged: true
         networks:
             - symfony
 
 volumes:
-    db_app:
+    db_app: {}
 
 networks:
-    symfony:
+    symfony: {}
